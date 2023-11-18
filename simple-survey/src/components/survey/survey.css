@@ -1,0 +1,47 @@
+.survey-container{
+    background: #ffffff;
+}
+/* background: rgb(115 83 112); */
+.option-circle {
+    width: 34px;
+    height: 34px;
+    padding: 10px;
+    font-size: 32px;
+    border-radius: 50%;
+    text-align: center;
+    color: 'rgb(101 86 98)', 
+  }
+  .square-box {
+    color: rgb(112, 85, 104);
+    margin-top: 2px;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    border-radius: 8px;
+  }
+  
+  .squareOption {
+    color: #fff;
+    height: 20px;
+    width: 12px;
+    padding: 10px;
+    background-color:rgb(102 84 98);
+    border-radius: 8px;
+    border: 1px solid rgb(102 84 98);
+  }
+  .question-id {
+    background-color: rgb(218, 206, 212);
+    border: 1px solid rgb(218, 206, 212);
+    color: rgb(112, 85, 104);
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+  }
+  .error-text {
+    color: #d32f2f;
+  }
+  
