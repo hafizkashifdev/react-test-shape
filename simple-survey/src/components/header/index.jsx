@@ -11,7 +11,7 @@ const Header = () => {
       <Container maxWidth="xxl">
       <Grid item xs={12} sx={{ p: 2 }}>
           <Box sx={{ color: '#fff' }}>
-            <Typography variant="h6" align="left">
+            <Typography variant="h6" align="left" sx={{color: 'rgb(101 86 98)', }}>
               Survey Form
             </Typography>
           </Box>

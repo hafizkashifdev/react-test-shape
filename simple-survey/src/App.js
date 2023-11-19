@@ -1,6 +1,8 @@
+
 import Header from "./components/header";
 import Home from "./components/home";
 import Survey from "./components/survey";
+
 
 
 function App() {
@@ -9,6 +11,7 @@ function App() {
     <Header/>
     <Home/>
    <Survey/>
+  
    </>
   );
 }

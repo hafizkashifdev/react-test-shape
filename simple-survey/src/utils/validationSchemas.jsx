@@ -10,7 +10,7 @@ const dateSchema = yup.object().shape({
 const textFieldSchema = yup.string().max(250, 'Field must be at most 250 characters').required('This field is required');
 
 export const surveySchema = yup.object().shape({
-  1: textFieldSchema,
+  1: yup.string().notRequired(),
   2: dateSchema,
   4: textFieldSchema,
   3: yup.string().notRequired(),

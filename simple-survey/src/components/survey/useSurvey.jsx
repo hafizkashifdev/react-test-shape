@@ -1,97 +1,99 @@
-// useSurvey.jsx
-import { useState } from 'react';
-import surveyData from './surveyData.json';
+// useSurvey.js
+import { useState, useEffect } from 'react';
 import { surveySchema } from '../../utils/validationSchemas';
-import { useFormik } from "formik";
+import { useFormik } from 'formik';
+import { fetchData } from '../../utils/api';
+
 const useSurvey = () => {
+  const [loading, setLoading] = useState(true);
+  const [surveyData, setSurveyData] = useState([]);
   const [surveyResponses, setSurveyResponses] = useState({});
   const [selectedButtonOption, setSelectedButtonOption] = useState(null);
   const [selectedListOption, setSelectedListOption] = useState(null);
-  const [isRequiredFieldMissing, setIsRequiredFieldMissing] = useState(false);
-  const handleInputChange = (questionId, option) => {
-    setSurveyResponses((prevResponses) => ({
-      ...prevResponses,
-      [questionId]: option,
-    }));
-  
+
+  useEffect(() => {
+    const fetchSurveyData = async () => {
+      try {
+        const data = await fetchData();
+        setSurveyData(data);
+        console.log('Fetched Data:', data);
+      } catch (error) {
+        console.error('Error fetching survey data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSurveyData();
+  }, []);
+
+  const handleInputChange = (questionId, option, isButton = true) => {
+    if (formik.isSubmitting) {
+      return;
+    }
+
     const questionType = surveyData.find((q) => q.id === questionId)?.questionType;
-  
-    if (questionType === 'Button') {
-      setSelectedButtonOption(option || null); // Set to null when cleared
-    } else if (questionType === 'list') {
-      setSelectedListOption(option || ''); // Set to an empty string when cleared
+
+    if (questionType === 'Button' && isButton) {
+      setSelectedButtonOption(option || null);
+      setSurveyResponses((prevResponses) => ({
+        ...prevResponses,
+        [questionId]: { option },
+      }));
+      formik.setFieldError(questionId, '');
+    } else if (questionType === 'list' && !isButton) {
+      setSelectedListOption(option || '');
+      setSurveyResponses((prevResponses) => ({
+        ...prevResponses,
+        [questionId]: { option },
+      }));
+      formik.setFieldError(questionId, '');
     }
   };
-  
-  const formik = useFormik({
-    initialValues: {
-      fields: {
-        DD: "",
-        MM: "",
-        YYYY: "",
 
-      },
-    },
-    validationSchema: surveySchema,
-    onSubmit: async (values) => {
-      try {
-        // Validate the entire form using yup schema
-        await surveySchema.validate(values, { abortEarly: false });
-
-        // Handle form submission
-        console.log("Form submitted:", values);
-
-        // Clear the form
-        formik.resetForm();
-
-        // You can perform additional actions after successful submission
-      } catch (error) {
-        // Validation failed, show errors
-        const validationErrors = {};
-        if (error.inner) {
-          error.inner.forEach((e) => {
-            validationErrors[e.path] = e.message;
-          });
-        }
-
-        console.error("Validation failed:", validationErrors);
-      }
-    },
-  });
-  
-
-  const checkRequiredFields = () => {
-    const isAnyRequiredFieldMissing = surveyData.some((question) => {
-      const questionId = question.id;
-      const fieldIsRequired = surveySchema.fields[questionId]?._exclusive?.required;
-      const fieldValue = formik.values[questionId];
-  
-      if (fieldIsRequired && fieldValue === undefined) {
-        return true;
-      }
-  
-      const questionType = surveyData.find((q) => q.id === questionId)?.questionType;
-  
-      if (fieldIsRequired && questionType === 'Button' && fieldValue === null) {
-        return true;
-      }
-  
-      if (fieldIsRequired && questionType === 'Dropdown' && fieldValue === '') {
-        return true;
-      }
-  
-      return false;
-    });
-  
-    setIsRequiredFieldMissing(isAnyRequiredFieldMissing);
+  const handleButtonInputChange = (questionId, option) => {
+    setSelectedButtonOption(option);
+    setSurveyResponses((prevResponses) => ({
+      ...prevResponses,
+      [questionId]: { option },
+    }));
   };
-  
+
+  const handleSubmit = async (values, { setSubmitting }) => {
+    try {
+      await surveySchema.validate(values, { abortEarly: false });
+
+      const dateValues = {
+        DD: parseInt(values.fields.DD, 10) || "",
+        MM: parseInt(values.fields.MM, 10) || "",
+        YYYY: parseInt(values.fields.YYYY, 10) || "",
+      };
+
+      const submittedValues = {
+        1: surveyResponses['1']?.option || '',
+        2: dateValues,
+        3: surveyResponses['3']?.option || '',
+        4: surveyResponses['4']?.option || '',
+        5: surveyResponses['5']?.option || '',
+      };
+
+      console.log("Form submitted:", JSON.stringify(submittedValues, null, 2));
+
+      setSelectedButtonOption(null);
+      setSelectedListOption(null);
+      setSurveyResponses({});
+
+      formik.resetForm();
+    } catch (error) {
+      console.error("Error during form submission:", error);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleSaveSurvey = () => {
-    checkRequiredFields();
-
     formik.validateForm().then((errors) => {
-      if (Object.keys(errors).length === 0 && !isRequiredFieldMissing) {
+      if (Object.keys(errors).length === 0) {
         formik.submitForm();
         console.log("Form submitted:", formik.values);
       } else {
@@ -99,8 +101,20 @@ const useSurvey = () => {
       }
     });
   };
+
+  const formik = useFormik({
+    initialValues: {
+      fields: {
+        DD: "",
+        MM: "",
+        YYYY: "",
+      },
+    },
+    validationSchema: surveySchema,
+    onSubmit: handleSubmit,
+  });
+
   const {
-    handleSubmit,
     handleChange,
     handleBlur,
     values,
@@ -108,22 +122,23 @@ const useSurvey = () => {
     touched,
     errors,
   } = formik;
+
   return {
-    isRequiredFieldMissing,
     surveyResponses,
-    selectedButtonOption,
+    selectedButtonOption,   
     selectedListOption,
     handleInputChange,
     handleChange,
     handleBlur,
-    handleSubmit,
+    handleSubmit: formik.handleSubmit,
     values,
     setFieldValue,
     handleSaveSurvey,
     touched,
     errors,
     surveyData,
-    setSelectedListOption
+    setSelectedListOption,
+    handleButtonInputChange,
   };
 };
 
